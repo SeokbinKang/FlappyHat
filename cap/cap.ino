@@ -170,12 +170,12 @@ void loop() {
     setLedA(2, temperature);
     setLedA(3, humidity);
     
-    if(uvlevel > 2.5)
+    if(uvLevel_raw > 350)
     {
       leftWing.write(90);
       rightWing.write(90);
     }
-    else if(uvlevel < 2.5)
+    else if(uvLevel_raw < 350)
     {
       leftWing.write(0);
       rightWing.write(180);
