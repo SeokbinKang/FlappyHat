@@ -3,16 +3,14 @@
 #include <Servo.h> 
 dht11 DHT11;
 
-#define DHT11PIN 8
+#define DHT11PIN 3
 Servo leftWing, rightWing;
 int pos = 0;
 
-const int ledPin = 13;      // led connected to digital pin 13
-const int temperatureSensor = A2; // the piezo is connected to analog pin 0
-const int vibrationSensor = A5;
-const int airSensor = A2;
-const int UVOUT = A0; //Output from the sensor
-const int REF_3V3 = A1; //3.3V power on the Arduino board
+//const int ledPin = 13;      // led connected to digital pin 13
+
+const int UVOUT = A1; //Output from the sensor
+const int REF_3V3 = A0; //3.3V power on the Arduino board
 
 
 const int threshold = 100;  // threshold value to decide when the detected sound is a knock or not
@@ -27,9 +25,9 @@ int ledState = LOW;         // variable used to store the last LED status, to to
 
 int debugEnable = 1;
 
-Adafruit_NeoPixel ledA = Adafruit_NeoPixel(5, 1, NEO_GRB + NEO_KHZ800);
-Adafruit_NeoPixel ledB = Adafruit_NeoPixel(5,2,NEO_GRB + NEO_KHZ800);
-Adafruit_NeoPixel ledC = Adafruit_NeoPixel(5, 3, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel ledA = Adafruit_NeoPixel(5, 8, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel ledB = Adafruit_NeoPixel(5,11,NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel ledC = Adafruit_NeoPixel(5,12, NEO_GRB + NEO_KHZ800);
 
 uint16_t ledA_level=0;  
 
@@ -44,11 +42,15 @@ void setup(){
   rightWing.write(0);
   leftWing.write(0);
   
-
- pinMode(ledPin, OUTPUT); // declare the ledPin as as OUTPUT
- pinMode(1,OUTPUT);
- pinMode(2,OUTPUT);
- pinMode(3,OUTPUT);
+ ledA.begin();
+ ledA.show();
+ ledB.begin();
+ ledB.show();
+ ledC.begin();
+ ledC.show();
+ pinMode(8,OUTPUT);
+ pinMode(11,OUTPUT);
+ pinMode(12,OUTPUT);
  Serial.begin(115200);       // use the serial port
 }
 
@@ -74,9 +76,9 @@ void setLedA(int ledID, uint16_t level) {
     }
     
   }
-  ledA.show();
+  ledB.show();
   delay(10);
-  } else if(ledID==1) {
+  } else if(ledID==3) {
   for(uint16_t i=0; i<ledC.numPixels(); i++) {
     if(i<=level) {
       ledC.setPixelColor(i, ledC.Color(52, 152, 219));
@@ -85,7 +87,7 @@ void setLedA(int ledID, uint16_t level) {
     }
     
   }
-  ledA.show();
+  ledC.show();
   delay(10);
   }
   
@@ -127,29 +129,30 @@ int readDHT11() {
 
 void loop() {
   // read the sensor and store it in the variable sensorReading:
-  tempersature_read = analogRead(temperatureSensor);    
-  vibration_read = analogRead(vibrationSensor);    
-  air_read = analogRead(airSensor);
-
+ 
   int DHTReady=0;
   
-   int uvLevel = averageAnalogRead(UVOUT);
-  int refLevel = averageAnalogRead(REF_3V3);
+   int uvLevel_raw = averageAnalogRead(UVOUT);
+  int refLevel = 1023;//averageAnalogRead(REF_3V3);
   
   //Use the 3.3V power pin as a reference to get a very accurate output value from sensor
-  float outputVoltage = 3.3 / refLevel * uvLevel;
-  
-  float uvIntensity = mapfloat(outputVoltage, 0.99, 2.8, 1, 4); //Convert the voltage to a UV intensity level
+  //float outputVoltage = 3.3 / refLevel * uvLevel;
+  float outputVoltage = uvLevel_raw;
+  float uvIntensity = map(uvLevel_raw, 1, 1023, 1, 4);
+  //float uvIntensity = mapfloat(outputVoltage, 0.99, 2.8, 1, 4); //Convert the voltage to a UV intensity level
   int uvlevel = uvIntensity;
   int temperature = -1;
   int humidity = -1;
-  if(debugEnable ) {
-    DHTReady = readDHT11();
+   DHTReady = readDHT11();
+   
+  if(debugEnable && DHTReady) {
     temperature =  map(DHT11.temperature,20,30,1,4);
     humidity = map(DHT11.humidity, 20,80,1,4);
     
-     Serial.print("[Sensor] ");
+    Serial.print("[Sensor] ");
     Serial.print("UV Intensity : ");
+    Serial.print(uvLevel_raw);
+    Serial.print(" , ");
     Serial.print(uvlevel);
     Serial.print(" ||| Temp : ");
     Serial.print(temperature);
@@ -158,6 +161,10 @@ void loop() {
     Serial.print(humidity);
     Serial.println("");
     
+    
+    /*setLedA(1, 3); 
+    setLedA(2, 3);
+    setLedA(3, 3);*/
     
     setLedA(1, uvlevel); 
     setLedA(2, temperature);
@@ -171,11 +178,11 @@ void loop() {
     else if(uvlevel < 2.5)
     {
       leftWing.write(0);
-      rightWing.write(0);
+      rightWing.write(180);
     }   
   }
      
-    delay(100);
+    delay(500);
 }
 
 
