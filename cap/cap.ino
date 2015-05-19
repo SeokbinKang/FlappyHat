@@ -1,9 +1,11 @@
 #include <Adafruit_NeoPixel.h>
 #include <dht11.h>
-
+#include <Servo.h> 
 dht11 DHT11;
 
 #define DHT11PIN 8
+Servo leftWing, rightWing;
+int pos = 0;
 
 const int ledPin = 13;      // led connected to digital pin 13
 const int temperatureSensor = A2; // the piezo is connected to analog pin 0
@@ -35,6 +37,14 @@ uint16_t ledA_level=0;
 
 
 void setup(){
+  
+  leftWing.attach(9);  // attaches the servo on pin 9 to the servo object 
+  rightWing.attach(10);  // attaches the servo on pin 10 to the servo object
+  
+  rightWing.write(0);
+  leftWing.write(0);
+  
+
  pinMode(ledPin, OUTPUT); // declare the ledPin as as OUTPUT
  pinMode(1,OUTPUT);
  pinMode(2,OUTPUT);
@@ -139,26 +149,30 @@ void loop() {
     humidity = map(DHT11.humidity, 20,80,1,4);
     
      Serial.print("[Sensor] ");
-    Serial.print("UV(RAW) : ");
-    Serial.print(outputVoltage);
-    Serial.print("   ");
-    Serial.print("UV(Scale) : ");
+    Serial.print("UV Intensity : ");
     Serial.print(uvlevel);
-    Serial.print("Temp : ");
+    Serial.print(" ||| Temp : ");
     Serial.print(temperature);
     Serial.print("   ");
-    Serial.print("Humidity : ");
+    Serial.print(" ||| Humidity : ");
     Serial.print(humidity);
-    Serial.println("   ");
+    Serial.println("");
     
     
-    setLedA(1,uvlevel); 
-    setLedA(2,temperature);
-    setLedA(3,humidity);
+    setLedA(1, uvlevel); 
+    setLedA(2, temperature);
+    setLedA(3, humidity);
     
-    
-
-      
+    if(uvlevel > 2.5)
+    {
+      leftWing.write(90);
+      rightWing.write(90);
+    }
+    else if(uvlevel < 2.5)
+    {
+      leftWing.write(0);
+      rightWing.write(0);
+    }   
   }
      
     delay(100);
